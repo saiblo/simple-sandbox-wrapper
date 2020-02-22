@@ -7,13 +7,7 @@ from .utils import log
 
 class SandboxInstance:
     def __init__(
-        self,
-        pid,
-        cgroup,
-        stdinFIFO,
-        stdoutFIFO,
-        stderrFIFO,
-        endedCallback=None,
+        self, pid, cgroup, stdinFIFO, stdoutFIFO, stderrFIFO, endedCallback=None,
     ):
         self.pid = pid
         self.cgroup = cgroup
@@ -33,7 +27,8 @@ class SandboxInstance:
 
     async def openFIFO(self):
         self.stdinFIFO, self.stdoutFIFO, self.stderrFIFO = await asyncio.gather(
-            self.stdinFIFO, self.stdoutFIFO, self.stderrFIFO)
+            self.stdinFIFO, self.stdoutFIFO, self.stderrFIFO
+        )
 
     async def initialize(self):
         await asyncio.gather(self.openFIFO(), self.addFreezerCgroup())
@@ -42,8 +37,9 @@ class SandboxInstance:
 
     async def cleanUp(self):
         # log(f"Clean up sandbox instance [PID: {self.pid}, CGROUP: {self.cgroup}]")
-        await asyncio.gather(self.stdinFIFO.close(), self.stdoutFIFO.close(),
-                             self.stderrFIFO.close())
+        await asyncio.gather(
+            self.stdinFIFO.close(), self.stdoutFIFO.close(), self.stderrFIFO.close()
+        )
 
     async def _end(self, result):
         log(f"Sandbox instance [PID: {self.pid}, CGROUP: {self.cgroup}] ended")
@@ -72,8 +68,8 @@ class SandboxInstance:
     async def addFreezerCgroup(self):
         try:
             async with aiofiles.open(
-                    f"/sys/fs/cgroup/freezer/{self.cgroup}/tasks",
-                    mode="w") as f:
+                f"/sys/fs/cgroup/freezer/{self.cgroup}/tasks", mode="w"
+            ) as f:
                 await f.write(str(self.pid))
         except OSError:
             pass
@@ -83,8 +79,8 @@ class SandboxInstance:
             return
         try:
             async with aiofiles.open(
-                    f"/sys/fs/cgroup/freezer/{self.cgroup}/freezer.state",
-                    mode="w") as f:
+                f"/sys/fs/cgroup/freezer/{self.cgroup}/freezer.state", mode="w"
+            ) as f:
                 await f.write("FROZEN")
         except OSError:
             pass
@@ -94,8 +90,8 @@ class SandboxInstance:
             return
         try:
             async with aiofiles.open(
-                    f"/sys/fs/cgroup/freezer/{self.cgroup}/freezer.state",
-                    mode="w") as f:
+                f"/sys/fs/cgroup/freezer/{self.cgroup}/freezer.state", mode="w"
+            ) as f:
                 await f.write("THAWED")
         except OSError:
             pass

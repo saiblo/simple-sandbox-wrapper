@@ -34,12 +34,7 @@ async def startSandboxCoro(fut, startArgs, endedCallback):
     async def startedCallback(pid, cgroup):
         log(f"Receive startSandbox request [{uuid}] response")
         instance = SandboxInstance(
-            pid,
-            cgroup,
-            stdinFIFO,
-            stdoutFIFO,
-            stderrFIFO,
-            endedCallback,
+            pid, cgroup, stdinFIFO, stdoutFIFO, stderrFIFO, endedCallback,
         )
         instance_map[uuid] = instance
         await instance.initialize()
@@ -47,11 +42,9 @@ async def startSandboxCoro(fut, startArgs, endedCallback):
         fut.set_result(instance)
 
     log(f"Send startSandbox request [{uuid}] to daemon")
-    await sio.emit("startSandbox", {
-        "uuid": uuid,
-        "args": startArgs
-    },
-                   callback=startedCallback)
+    await sio.emit(
+        "startSandbox", {"uuid": uuid, "args": startArgs}, callback=startedCallback
+    )
 
 
 def startSandbox(startArgs, endedCallback=None):
@@ -63,8 +56,7 @@ def startSandbox(startArgs, endedCallback=None):
 async def sandboxEnded(uuid, result):
     log(f"Receive sandboxEnded signal [{uuid}]")
     if uuid in instance_map:
-        await instance_map[uuid
-                           ].initializedFuture  # enSure instance initalized
+        await instance_map[uuid].initializedFuture  # enSure instance initalized
         await instance_map[uuid]._end(result)
         del instance_map[uuid]
 
