@@ -7,6 +7,7 @@ import os
 from uuid import uuid1
 from .utils import openWriteFIFO, openReadFIFO, log
 from .sandbox_instance import SandboxInstance
+from .exception import StartSandboxError
 
 instance_map = {}
 fifoDir = "/tmp/simple-sandbox-wrapper/"
@@ -31,15 +32,26 @@ async def startSandboxCoro(fut, startArgs, endedCallback):
     startArgs["stdout"] = stdoutFIFOName
     startArgs["stderr"] = stderrFIFOName
 
-    async def startedCallback(pid, cgroup):
-        log(f"Receive startSandbox request [{uuid}] response")
-        instance = SandboxInstance(
-            pid, cgroup, stdinFIFO, stdoutFIFO, stderrFIFO, endedCallback,
-        )
-        instance_map[uuid] = instance
-        await instance.initialize()
-        log(f"Sandbox instance [PID: {pid}, CGROUP: {cgroup}] created")
-        fut.set_result(instance)
+    async def startedCallback(result, pid, cgroup):
+        if result["success"]:
+            log(
+                f"Receive startSandbox request [{uuid}] response. Sandbox started successfully"
+            )
+            instance = SandboxInstance(
+                pid, cgroup, stdinFIFO, stdoutFIFO, stderrFIFO, endedCallback,
+            )
+            instance_map[uuid] = instance
+            await instance.initialize()
+            log(f"Sandbox instance [PID: {pid}, CGROUP: {cgroup}] created")
+            fut.set_result(instance)
+        else:
+            log(
+                f"Receive startSandbox request [{uuid}] response. Sandbox failed to start, reason: {result['reason']}"
+            )
+            stdinFIFO.cancel()
+            stdoutFIFO.cancel()
+            stderrFIFO.cancel()
+            fut.set_exception(StartSandboxError(result["reason"]))
 
     log(f"Send startSandbox request [{uuid}] to daemon")
     await sio.emit(

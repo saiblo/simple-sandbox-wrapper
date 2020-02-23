@@ -1,0 +1,3 @@
+class StartSandboxError(Exception):
+    pass
+

@@ -11,12 +11,8 @@ args = {
     "chroot": "/opt/sandbox/rootfs",
     "mounts": [
         {"src": "/opt/sandbox-test/binary", "dst": "/sandbox/binary", "limit": 0},
-        {
-            "src": "/opt/sandbox-test/working",
-            "dst": "/sandbox/working",
-            "limit": 10485760,
-        },
-        {"src": "/opt/sandbox-test/tmp", "dst": "/tmp", "limit": 10485760},
+        {"src": "/opt/sandbox-test/working", "dst": "/sandbox/working", "limit": 0,},
+        {"src": "/opt/sandbox-test/tmp", "dst": "/tmp", "limit": 0},
     ],
     "executable": "/usr/bin/python",
     "parameters": ["/usr/bin/python", "test.py"],
