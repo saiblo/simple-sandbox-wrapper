@@ -12,6 +12,7 @@ from .exception import StartSandboxError
 instance_map = {}
 fifoDir = "/tmp/simple-sandbox-wrapper/"
 sio = None
+connectFuture = None
 
 
 async def startSandboxCoro(fut, startArgs, endedCallback):
@@ -68,36 +69,27 @@ def startSandbox(startArgs, endedCallback=None):
 async def sandboxEnded(uuid, result):
     log(f"Receive sandboxEnded signal [{uuid}]")
     if uuid in instance_map:
+        print(result)
         await instance_map[uuid].initializedFuture  # enSure instance initalized
         await instance_map[uuid]._end(result)
         del instance_map[uuid]
 
 
 async def connect(url="http://localhost:5283"):
-    global sio
-    sio = socketio.AsyncClient()
+    global sio, connectFuture
+    if not sio:
+        sio = socketio.AsyncClient()
+        connectFuture = asyncio.Future()
     await sio.connect(url)
+    connectFuture.set_result(None)
     sio.on("sandboxEnded", handler=sandboxEnded)
 
 
 async def ensureConnected():
+    global sio, connectFuture
     if not sio:
+        sio = socketio.AsyncClient()
+        connectFuture = asyncio.Future()
         await connect()
+    await connectFuture
 
-
-signaled = False
-
-
-def on_signal():
-    global signaled
-    # if signaled:
-    # log("Duplicate signals, ignoring")
-
-    signaled = True
-    # log("Signaled, stopping")
-
-    try:
-        asyncio.create_task(sio.disconnect())
-    except Exception as e:
-        traceback.print_exc()
-        exit(-1)
