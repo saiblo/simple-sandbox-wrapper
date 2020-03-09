@@ -4,7 +4,7 @@ import logging
 import signal
 import traceback
 import os
-from uuid import uuid1
+from uuid import uuid4
 from .utils import openWriteFIFO, openReadFIFO, log
 from .sandbox_instance import SandboxInstance
 from .exception import StartSandboxError
@@ -18,7 +18,7 @@ connectFuture = None
 async def startSandboxCoro(fut, startArgs, endedCallback):
     await ensureConnected()
 
-    uuid = str(uuid1())
+    uuid = str(uuid4())
 
     stdinFIFOName = f"{fifoDir}{uuid}.in"
     stdoutFIFOName = f"{fifoDir}{uuid}.out"
@@ -93,3 +93,7 @@ async def ensureConnected():
         await connect()
     await connectFuture
 
+async def disconnect():
+    if sio:
+        await connectFuture
+        await sio.disconnect()
