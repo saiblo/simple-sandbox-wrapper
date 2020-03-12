@@ -7,13 +7,17 @@ from .utils import log
 
 class SandboxInstance:
     def __init__(
-        self, pid, cgroup, stdinFIFO, stdoutFIFO, stderrFIFO, endedCallback=None,
+        self, pid, cgroup, stdinFIFO, stdoutFIFO, stderrFIFO, stdinFIFOName, stdoutFIFOName, stderrFIFOName, endedCallback=None,
     ):
         self.pid = pid
         self.cgroup = cgroup
         self.stdinFIFO = stdinFIFO
         self.stdoutFIFO = stdoutFIFO
         self.stderrFIFO = stderrFIFO
+        self.stdinFIFOName = stdinFIFOName
+        self.stdoutFIFOName = stdoutFIFOName
+        self.stderrFIFOName = stderrFIFOName
+        self.initialized = False
         self.initialized = False
         self.initializedFuture = asyncio.Future()
         self.isEnded = False
@@ -21,15 +25,16 @@ class SandboxInstance:
         self.endedFuture = asyncio.Future()
         self.stdoutContent = None
         self.stderrContent = None
+        self.isCleaned = False
 
     def __del__(self):
-        asyncio.create_task(self.cleanUp())
+        if not self.isCleaned:
+            asyncio.create_task(self.cleanUp())
 
     async def openFIFO(self):
         self.stdinFIFO, self.stdoutFIFO, self.stderrFIFO = await asyncio.gather(
             self.stdinFIFO, self.stdoutFIFO, self.stderrFIFO
         )
-        pass
 
     async def initialize(self):
         await asyncio.gather(self.openFIFO())
@@ -38,9 +43,13 @@ class SandboxInstance:
 
     async def cleanUp(self):
         # log(f"Clean up sandbox instance [PID: {self.pid}, CGROUP: {self.cgroup}]")
+        self.isCleaned = True
         await asyncio.gather(
             self.stdinFIFO.close(), self.stdoutFIFO.close(), self.stderrFIFO.close()
         )
+        os.unlink(self.stdinFIFOName)
+        os.unlink(self.stdoutFIFOName)
+        os.unlink(self.stderrFIFOName)
 
     async def _end(self, result):
         log(f"Sandbox instance [PID: {self.pid}, CGROUP: {self.cgroup}] ended")

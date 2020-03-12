@@ -12,7 +12,6 @@ def openReadFIFO(name):
 
 
 def openWriteFIFO(name):
-    print(name)
     os.mkfifo(name)
     return asyncio.create_task(aiofiles.open(name, "wb"))
 

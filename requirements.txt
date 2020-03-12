@@ -6,7 +6,7 @@ chardet==3.0.4
 idna==2.9
 multidict==4.7.4
 python-engineio==3.11.2
-python-socketio==4.4.0
+python-socketio[asyncio_client]
 six==1.14.0
 websockets==8.1
 yarl==1.4.2

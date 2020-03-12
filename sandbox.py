@@ -3,6 +3,7 @@ import asyncio
 import logging
 import signal
 import traceback
+import tempfile
 import os
 from uuid import uuid4
 from .utils import openWriteFIFO, openReadFIFO, log
@@ -10,7 +11,7 @@ from .sandbox_instance import SandboxInstance
 from .exception import StartSandboxError
 
 instance_map = {}
-fifoDir = "/tmp/simple-sandbox-wrapper/"
+fifoDir = tempfile.mkdtemp()
 sio = None
 connectFuture = None
 
@@ -39,7 +40,7 @@ async def startSandboxCoro(fut, startArgs, endedCallback):
                 f"Receive startSandbox request [{uuid}] response. Sandbox started successfully"
             )
             instance = SandboxInstance(
-                pid, cgroup, stdinFIFO, stdoutFIFO, stderrFIFO, endedCallback,
+                    pid, cgroup, stdinFIFO, stdoutFIFO, stderrFIFO, stdinFIFOName, stdoutFIFOName, stderrFIFOName, endedCallback,
             )
             instance_map[uuid] = instance
             await instance.initialize()
