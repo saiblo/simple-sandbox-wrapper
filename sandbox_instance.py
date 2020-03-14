@@ -1,7 +1,7 @@
 import asyncio
 import aiofiles
 import os
-from .utils import enSureDir, rmdir
+from .utils import rmdir, unlink
 from .utils import log
 
 
@@ -133,8 +133,7 @@ class SandboxInstance:
             )
             return memUsageWithCache - cacheUsage
         except OSError:
-            await self.endedFuture
-            return self.endedFuture["memory"]
+            return (await self.endedFuture)["memory"]
 
     async def getCpuTimeUsage(self):
         try:

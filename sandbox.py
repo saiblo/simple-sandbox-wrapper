@@ -21,9 +21,9 @@ async def startSandboxCoro(fut, startArgs, endedCallback):
 
     uuid = str(uuid4())
 
-    stdinFIFOName = f"{fifoDir}{uuid}.in"
-    stdoutFIFOName = f"{fifoDir}{uuid}.out"
-    stderrFIFOName = f"{fifoDir}{uuid}.err"
+    stdinFIFOName = f"{fifoDir}/{uuid}.in"
+    stdoutFIFOName = f"{fifoDir}/{uuid}.out"
+    stderrFIFOName = f"{fifoDir}/{uuid}.err"
 
     stdinFIFO = openWriteFIFO(stdinFIFOName)
     stdoutFIFO = openReadFIFO(stdoutFIFOName)
