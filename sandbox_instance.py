@@ -144,3 +144,24 @@ class SandboxInstance:
         except OSError:
             await self.endedFuture
             return self.endedFuture["time"]
+
+    async def getUserCpuTimeUsage(self):
+        try:
+            actualCpuTime = int(
+                await self.readCgroupProperty("cpuacct", "cpuacct.usage_user")
+            )
+            return actualCpuTime
+        except OSError:
+            await self.endedFuture
+            return self.endedFuture["user_time"]
+
+    async def getSysCpuTimeUsage(self):
+        try:
+            actualCpuTime = int(
+                await self.readCgroupProperty("cpuacct", "cpuacct.usage_sys")
+            )
+            return actualCpuTime
+        except OSError:
+            await self.endedFuture
+            return self.endedFuture["sys_time"]
+        
